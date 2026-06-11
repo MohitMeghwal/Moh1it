@@ -2128,6 +2128,74 @@
         // CHAT MANAGER
         // Orchestrates conversations, messages, and model interaction
         // ============================================
+
+        class CommandManager {
+
+    static process(message){
+
+        const msg = message.toLowerCase().trim();
+
+        if(msg === "what is my name"){
+
+    const name =
+        localStorage.getItem(
+            "mohit_user_name"
+        );
+
+    return name
+        ? `Your name is ${name}`
+        : "I don't know your name yet";
+        }
+        if(msg.startsWith("my name is ")){
+
+    const name = msg.replace("my name is ","");
+
+    localStorage.setItem(
+        "mohit_user_name",
+        name
+    );
+
+    return `Nice to meet you ${name}`;
+        }
+
+        if(msg === "hi" || msg === "hello"){
+            return "Hello Mohit 👋";
+        }
+
+        if(msg === "time"){
+            return new Date().toLocaleTimeString();
+        }
+
+        if(msg === "date"){
+            return new Date().toLocaleDateString();
+        }
+
+        if(msg === "help"){
+            return `
+Available Commands:
+
+• hi
+• hello
+• time
+• date
+• help
+• battery
+• clear chat
+• about
+            `;
+        }
+
+        if(msg === "about"){
+            return "Moh1it AI Assistant v1.0";
+        }
+
+        if(msg === "battery"){
+            return "Battery API check requested";
+        }
+
+        return null;
+    }
+        }
         class ChatManager {
             constructor(storageManager, modelManager, memoryManager, uiManager) {
                 this.storage = storageManager;
@@ -2304,6 +2372,33 @@
                 this._persistData();
 
                 // Show typing indicator
+                const commandReply =
+    CommandManager.process(messageText);
+
+if(commandReply){
+
+    const assistantMsg = {
+        role:'assistant',
+        content:commandReply,
+        timestamp:new Date().toISOString()
+    };
+
+    conv.messages.push(assistantMsg);
+
+    this.ui.hideTypingIndicator();
+
+    this.ui.addMessageBubble(
+        'assistant',
+        commandReply,
+        assistantMsg.timestamp
+    );
+
+    this._persistData();
+
+    this.isProcessing = false;
+
+    return;
+}
                 this.ui.showTypingIndicator();
 
                 // Generate AI response
