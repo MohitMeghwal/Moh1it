@@ -2204,6 +2204,7 @@ Available Commands:
                 this.model = modelManager;
                 this.memory = memoryManager;
                 this.ui = uiManager;
+                this.engine = null;
 
                 this.conversations = [];
                 this.activeConversationId = null;
@@ -2633,5 +2634,9 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
+    <script type="module">
+import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+window.webllm = webllm;
+    </script>
 </body>
 </html>
