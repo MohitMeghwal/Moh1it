@@ -1457,6 +1457,7 @@
             constructor() {
                 this.activeModel = null;
                 this.modelType = null; // 'local' | 'api' | 'wasm' | 'webgpu'
+                this.engine = null;
                 this.availableModels = [
                     { id: 'gemma-3', name: 'Gemma 3', type: 'local', runtime: 'mlc' },
                     { id: 'phi-3-mini', name: 'Phi-3 Mini', type: 'local', runtime: 'wasm' },
@@ -1476,21 +1477,20 @@
              * @returns {Promise<boolean>}
              */
             async connectModel(modelId) {
-                this.isLoading = true;
-                console.log(`[ModelManager] Connecting to model: ${modelId}...`);
-                // TODO: Implement actual model connection logic here
-                // - For Gemma 3 / Phi-3 Mini: Initialize via MLC or Transformers.js
-                // - For TinyLlama: Initialize via WebGPU or WASM
-                // - For Qwen 2.5 1.5B: Initialize via Transformers.js
-                // - For OpenAI API: Set up fetch client with API key
-                // - For Ollama: Connect to local Ollama endpoint
-                await this._simulateConnection();
-                this.activeModel = modelId;
-                this.isReady = true;
-                this.isLoading = false;
-                console.log(`[ModelManager] Model ${modelId} connected successfully.`);
-                return true;
-            }
+
+    this.isLoading = true;
+
+    this.engine = new window.webllm.MLCEngine();
+
+    await this.engine.reload(modelId);
+
+    this.activeModel = modelId;
+
+    this.isReady = true;
+    this.isLoading = false;
+
+    return true;
+                    }
 
             /**
              * Placeholder: Send a prompt to the connected model.
@@ -1499,6 +1499,40 @@
              * @returns {Promise<string>} - The model's response
              */
             async generateResponse(prompt, conversationHistory = []) {
+
+    if (!this.engine) {
+        throw new Error("Model not loaded");
+    }
+
+    const messages = [
+        {
+            role: "system",
+            content:
+                "You are Moh1it AI. Reply in Hindi when user speaks Hindi."
+        }
+    ];
+
+    conversationHistory.forEach(msg => {
+        messages.push({
+            role: msg.role,
+            content: msg.content
+        });
+    });
+
+    messages.push({
+        role: "user",
+        content: prompt
+    });
+
+    const response =
+        await this.engine.chat.completions.create({
+            messages,
+            temperature: 0.7,
+            max_tokens: 300
+        });
+
+    return response.choices[0].message.content;
+            }
                 if (!this.isReady) {
                     throw new Error('No model connected. Please connect a model first.');
                 }
@@ -2204,7 +2238,6 @@ Available Commands:
                 this.model = modelManager;
                 this.memory = memoryManager;
                 this.ui = uiManager;
-                this.engine = null;
 
                 this.conversations = [];
                 this.activeConversationId = null;
@@ -2595,6 +2628,8 @@ if(commandReply){
             // Initialize Chat Manager
             const chatManager = new ChatManager(storageManager, modelManager, memoryManager, uiManager);
             chatManager.init();
+            chatManager.connectModel(
+    "Qwen2.5-0.5B-Instruct-q4f16_1-MLC");
 
             // Expose for debugging and future external integration
             window.Moh1itAI = {
@@ -2618,7 +2653,7 @@ if(commandReply){
             console.log('━'.repeat(50));
 
             // Set initial status
-            uiManager.setStatus({ status: 'ready', text: 'Ready' });
+            uiManager.setStatus({ status: 'connecting',  text: 'Loading Qwen...});
         }
 
         // Start the app when DOM is ready
