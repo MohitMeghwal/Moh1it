@@ -1785,42 +1785,46 @@
 
             /** Add a message bubble to the chat area */
             addMessageBubble(role, content, timestamp) {
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${role}`;
+    const wrapper = document.createElement('div');
+    wrapper.className = `message-wrapper ${role}`;
 
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble';
-                bubble.innerHTML = this._renderContent(content);
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = this._renderContent(content);
 
-                const meta = document.createElement('div');
-                meta.className = 'message-meta';
+    const meta = document.createElement('div');
+    meta.className = 'message-meta';
 
-                const timeSpan = document.createElement('span');
-                timeSpan.className = 'timestamp';
-                timeSpan.textContent = this._formatTime(timestamp);
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'timestamp';
+    timeSpan.textContent = this._formatTime(timestamp);
+    meta.appendChild(timeSpan);
 
-                meta.appendChild(timeSpan);
+    if (role === 'assistant') {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.innerHTML = '📋';
+        copyBtn.title = 'Copy message';
+        copyBtn.setAttribute('aria-label', 'Copy message');
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._copyToClipboard(content, copyBtn);
+        });
+        meta.appendChild(copyBtn);
+    }
 
-                if (role === 'assistant') {
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'copy-btn';
-                    copyBtn.innerHTML = '📋';
-                    copyBtn.title = 'Copy message';
-                    copyBtn.setAttribute('aria-label', 'Copy message');
-                    copyBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this._copyToClipboard(content, copyBtn);
-                    });
-                    meta.appendChild(copyBtn);
-                }
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(meta);
 
-                wrapper.appendChild(bubble);
-                wrapper.appendChild(meta);
+    // ✅ सेफ्टी चेक: typingIndicator चाइल्ड है तो उसके पहले डालें, नहीं तो append करें
+    if (this.typingIndicator && this.typingIndicator.parentNode === this.chatArea) {
+        this.chatArea.insertBefore(wrapper, this.typingIndicator);
+    } else {
+        this.chatArea.appendChild(wrapper);
+    }
 
-                // Insert before typing indicator
-                this.chatArea.insertBefore(wrapper, this.typingIndicator);
-                this._scrollToBottom();
-                return wrapper;
+    this._scrollToBottom();
+    return wrapper;
             }
 
             /** Clear all message bubbles from chat area */
