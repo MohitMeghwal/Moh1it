@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6c4cff">
     <meta charset="UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
@@ -2606,10 +2607,11 @@ if(commandReply){
 </script>
 <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
+  navigator.serviceWorker.register("./sw.js")
+    .then(() => console.log("SW Registered"))
+    .catch(err => console.log(err));
 }
 </script>
-
 
     <script type="module">
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
