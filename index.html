@@ -1449,149 +1449,55 @@
         // MODEL MANAGER (Placeholder for future integration)
         // ============================================
         class ModelManager {
-            constructor() {
-                this.activeModel = null;
-                this.modelType = null; // 'local' | 'api' | 'wasm' | 'webgpu'
-                this.engine = null;
-                this.availableModels = [
-                    { id: 'gemma-3', name: 'Gemma 3', type: 'local', runtime: 'mlc' },
-                    { id: 'phi-3-mini', name: 'Phi-3 Mini', type: 'local', runtime: 'wasm' },
-                    { id: 'tinyllama', name: 'TinyLlama', type: 'local', runtime: 'webgpu' },
-                    { id: 'qwen-2.5-1.5b', name: 'Qwen 2.5 1.5B', type: 'local', runtime: 'transformers.js' },
-                    { id: 'openai-api', name: 'OpenAI Compatible API', type: 'api', runtime: 'fetch' },
-                    { id: 'ollama', name: 'Ollama Local', type: 'api', runtime: 'fetch' },
-                ];
-                this.isReady = false;
-                this.isLoading = false;
-            }
-
-            /**
-             * Placeholder: Connect to a model.
-             * In the future, this will initialize WebAssembly, WebGPU, or API connections.
-             * @param {string} modelId - The model identifier
-             * @returns {Promise<boolean>}
-             */
+    constructor() {
+        this.activeModel = null;
+        this.engine = null;
+        this.isReady = false;
+        this.isLoading = false;
+        this.availableModels = [
+            { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 0.5B', type: 'local' },
+            // ... aapke baaki models
+        ];
+    }
             async connectModel(modelId) {
-
-    this.isLoading = true;
-
-    this.engine = new window.webllm.MLCEngine();
-
-    await this.engine.reload(modelId);
-
-    this.activeModel = modelId;
-
-    this.isReady = true;
-    this.isLoading = false;
-
-    return true;
-                    }
-
-            /**
-             * Placeholder: Send a prompt to the connected model.
-             * @param {string} prompt - The user's message
-             * @param {Array} conversationHistory - Previous messages for context
-             * @returns {Promise<string>} - The model's response
-             */
-            async generateResponse(prompt, conversationHistory = []) {
-
-    if (!this.engine) {
-        throw new Error("Model not loaded");
+        this.isLoading = true;
+        this.engine = new window.webllm.MLCEngine();
+        await this.engine.reload(modelId);
+        this.activeModel = modelId;
+        this.isReady = true;
+        this.isLoading = false;
+        return true;
     }
 
-    const messages = [
-        {
-            role: "system",
-            content:
-                "You are Moh1it AI. Reply in Hindi when user speaks Hindi."
+    async generateResponse(prompt, conversationHistory = []) {
+        if (!this.engine) {
+            throw new Error("Model not loaded");
         }
-    ];
 
-    conversationHistory.forEach(msg => {
-        messages.push({
-            role: msg.role,
-            content: msg.content
+        const messages = [
+            {
+                role: "system",
+                content: "You are Moh1it AI. Reply in Hindi when user speaks Hindi."
+            }
+        ];
+
+        conversationHistory.forEach(msg => {
+            messages.push({ role: msg.role, content: msg.content });
         });
-    });
 
-    messages.push({
-        role: "user",
-        content: prompt
-    });
+        messages.push({ role: "user", content: prompt });
 
-    const response =
-        await this.engine.chat.completions.create({
+        const response = await this.engine.chat.completions.create({
             messages,
             temperature: 0.7,
             max_tokens: 300
         });
 
-    return response.choices[0].message.content;
-            }
-                if (!this.isReady) {
-                    throw new Error('No model connected. Please connect a model first.');
-                }
-                console.log(`[ModelManager] Generating response for prompt: "${prompt.substring(0, 50)}..."`);
-                // TODO: Route to the appropriate inference backend
-                // - Local models: Run inference via WebAssembly/WebGPU
-                // - API models: Make fetch request
-                // - Streaming: Use ReadableStream or async iterator
-                await this._simulateDelay();
-                return this._getPlaceholderResponse(prompt);
-            }
+        return response.choices[0].message.content;
+    }
 
-            /**
-             * Placeholder: Stream a response token by token.
-             * @param {string} prompt
-             * @param {Array} conversationHistory
-             * @param {Function} onToken - Callback for each token
-             * @returns {Promise<void>}
-             */
-            async generateStreamingResponse(prompt, conversationHistory = [], onToken) {
-                console.log(`[ModelManager] Streaming response for prompt: "${prompt.substring(0, 50)}..."`);
-                const fullResponse = this._getPlaceholderResponse(prompt);
-                const words = fullResponse.split(' ');
-                for (const word of words) {
-                    await this._simulateTokenDelay();
-                    onToken(word + ' ');
-                }
-            }
-
-            disconnectModel() {
-                console.log(`[ModelManager] Disconnecting model: ${this.activeModel}`);
-                this.activeModel = null;
-                this.isReady = false;
-                this.isLoading = false;
-            }
-
-            getStatus() {
-                if (this.isLoading) return { status: 'connecting', text: 'Connecting...' };
-                if (this.isReady && this.activeModel) {
-                    const model = this.availableModels.find(m => m.id === this.activeModel);
-                    return { status: 'ready', text: model ? `${model.name} Ready` : 'Model Ready' };
-                }
-                return { status: 'offline', text: 'Offline' };
-            }
-
-            async _simulateConnection() {
-                return new Promise(resolve => setTimeout(resolve, 800));
-            }
-            async _simulateDelay() {
-                return new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 900));
-            }
-            async _simulateTokenDelay() {
-                return new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 50));
-            }
-            _getPlaceholderResponse(prompt) {
-                const responses = [
-                    `Thank you for your message! I'm currently running in **demo mode** — no AI model is connected yet.\n\nOnce a model like **Gemma 3**, **Phi-3 Mini**, **TinyLlama**, or **Qwen 2.5 1.5B** is integrated, I'll be able to provide real, intelligent responses to your queries.\n\nYour message was: *"${prompt.substring(0, 80)}${prompt.length > 80 ? '...' : ''}"*\n\nStay tuned! 🚀`,
-                    `I received your message! This is a placeholder response from the **Moh1it AI** interface.\n\nThe architecture is ready for:\n- Local inference via **WebAssembly** or **WebGPU**\n- **Ollama** integration\n- **OpenAI-compatible** API endpoints\n- **Transformers.js** for in-browser models\n\nYour input has been logged and will be processed once a model is connected.`,
-                    `Hello! 👋 I'm the Moh1it AI assistant shell. I don't have a brain yet, but the interface is fully functional!\n\n**Supported future models:**\n• Gemma 3\n• Phi-3 Mini\n• TinyLlama\n• Qwen 2.5 1.5B\n\nConnect a model to start having real conversations.`,
-                ];
-                return responses[Math.floor(Math.random() * responses.length)];
-            }
+    // ... baaki methods (disconnect, getStatus, etc.) waise hi rahenge
         }
-
         // ============================================
         // MEMORY MANAGER (Placeholder for context window management)
         // ============================================
