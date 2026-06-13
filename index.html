@@ -1455,12 +1455,19 @@
         this.isReady = false;
         this.isLoading = false;
         this.availableModels = [
+            { id: 'gemma-3', name: 'Gemma 3', type: 'local', runtime: 'mlc' },
+            { id: 'phi-3-mini', name: 'Phi-3 Mini', type: 'local', runtime: 'wasm' },
+            { id: 'tinyllama', name: 'TinyLlama', type: 'local', runtime: 'webgpu' },
+            { id: 'qwen-2.5-1.5b', name: 'Qwen 2.5 1.5B', type: 'local', runtime: 'transformers.js' },
+            { id: 'openai-api', name: 'OpenAI Compatible API', type: 'api', runtime: 'fetch' },
+            { id: 'ollama', name: 'Ollama Local', type: 'api', runtime: 'fetch' },
             { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 0.5B', type: 'local' },
-            // ... aapke baaki models
         ];
     }
-            async connectModel(modelId) {
+
+    async connectModel(modelId) {
         this.isLoading = true;
+        // WebLLM engine create
         this.engine = new window.webllm.MLCEngine();
         await this.engine.reload(modelId);
         this.activeModel = modelId;
@@ -1496,7 +1503,33 @@
         return response.choices[0].message.content;
     }
 
-    // ... baaki methods (disconnect, getStatus, etc.) waise hi rahenge
+    // Ye method zaroori hai – error yahi se aa rahi thi
+    getStatus() {
+        if (this.isLoading) {
+            return { status: 'connecting', text: 'Connecting...' };
+        }
+        if (this.isReady && this.activeModel) {
+            const model = this.availableModels.find(m => m.id === this.activeModel);
+            return {
+                status: 'ready',
+                text: model ? `${model.name} Ready` : 'Model Ready'
+            };
+        }
+        return { status: 'offline', text: 'Offline' };
+    }
+
+    disconnectModel() {
+        console.log(`Disconnecting: ${this.activeModel}`);
+        this.activeModel = null;
+        this.isReady = false;
+        this.isLoading = false;
+        this.engine = null;
+    }
+
+    // Placeholder response (only used if generateResponse fails – not needed now but keep for safety)
+    _getPlaceholderResponse(prompt) {
+        return `I'm running on WebLLM. Your message: "${prompt.substring(0, 80)}"`;
+    }
         }
         // ============================================
         // MEMORY MANAGER (Placeholder for context window management)
